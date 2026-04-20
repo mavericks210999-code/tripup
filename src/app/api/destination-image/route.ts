@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/apiAuth';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 
 // Curated fallback images for popular destinations (Unsplash photo IDs)
 const DESTINATION_FALLBACKS: Record<string, string> = {
@@ -28,18 +30,29 @@ function getFallbackImage(destination: string): string {
   const key = destination.toLowerCase().replace(/[^a-z ]/g, '').trim();
   const photoId = Object.entries(DESTINATION_FALLBACKS).find(([k]) =>
     key.includes(k) || k.includes(key)
-  )?.[1] || '1469854523086-cc02fe5d8800'; // generic travel fallback
+  )?.[1] || '1469854523086-cc02fe5d8800';
 
   return `https://images.unsplash.com/photo-${photoId}?w=800&h=500&fit=crop&q=80`;
 }
 
 export async function GET(req: NextRequest) {
+  // ── 1. Auth ────────────────────────────────────────────────────────────────
+  const auth = await requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const { userId } = auth;
+
+  // ── 2. Rate limit: 30 req / 60s per user ──────────────────────────────────
+  const rl = checkRateLimit(`dest-image:${userId}`, 30, 60_000);
+  if (!rl.allowed) {
+    const { body, headers } = rateLimitResponse(rl.resetAt);
+    return NextResponse.json(body, { status: 429, headers });
+  }
+
   const { searchParams } = new URL(req.url);
-  const destination = searchParams.get('destination') || '';
+  const destination = (searchParams.get('destination') ?? '').slice(0, 200);
 
   const accessKey = process.env.UNSPLASH_ACCESS_KEY;
 
-  // If no Unsplash key, return a curated fallback
   if (!accessKey) {
     return NextResponse.json({ url: getFallbackImage(destination) });
   }
@@ -53,7 +66,7 @@ export async function GET(req: NextRequest) {
           Authorization: `Client-ID ${accessKey}`,
           'Accept-Version': 'v1',
         },
-        next: { revalidate: 3600 }, // cache for 1 hour per destination
+        next: { revalidate: 3600 },
       }
     );
 

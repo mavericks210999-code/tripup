@@ -21,6 +21,7 @@ import DayModal from '@/components/DayModal';
 import ExpenseCard from '@/components/ExpenseCard';
 import ShareModal from '@/components/ShareModal';
 import { Trip, Activity, Expense } from '@/types';
+import { getAuthHeaders } from '@/lib/clientAuth';
 
 // ─── Category buttons config ─────────────────────────────────────────────────
 
@@ -371,7 +372,7 @@ function ExploreTab({ trip, tripId }: { trip: Trip; tripId: string }) {
     try {
       const res = await fetch('/api/places', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({
           destination: trip.destination,
           category: category === 'All' ? '' : category,

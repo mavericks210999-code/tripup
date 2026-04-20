@@ -9,12 +9,14 @@ import { generateItinerary } from '@/services/ai';
 import { detectCurrency } from '@/lib/currency';
 import AuthGuard from '@/components/AuthGuard';
 import { showToast } from '@/components/Toast';
+import { getAuthHeaders } from '@/lib/clientAuth';
 import type { Activity } from '@/types';
 
 // ─── Destination cover image lookup ──────────────────────────────────────────
 async function fetchCoverImage(destination: string): Promise<string> {
   try {
-    const res = await fetch(`/api/destination-image?destination=${encodeURIComponent(destination)}`);
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/destination-image?destination=${encodeURIComponent(destination)}`, { headers });
     if (res.ok) {
       const data = await res.json();
       return data.url || getFallbackImage(destination);

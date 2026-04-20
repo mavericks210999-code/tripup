@@ -8,6 +8,7 @@ import { getTrip, updateTrip } from '@/services/trips';
 import { showToast } from '@/components/Toast';
 import AuthGuard from '@/components/AuthGuard';
 import { Trip } from '@/types';
+import { getAuthHeaders } from '@/lib/clientAuth';
 
 const TRAVEL_STYLES = ['Cultural', 'Adventure', 'Relaxed', 'Luxury', 'Budget', 'Foodie', 'Nature', 'Urban'];
 
@@ -48,7 +49,9 @@ export default function EditTripPage() {
     if (!destination.trim()) return;
     setLoadingImage(true);
     try {
-      const res = await fetch(`/api/destination-image?destination=${encodeURIComponent(destination)}`);
+      const res = await fetch(`/api/destination-image?destination=${encodeURIComponent(destination)}`, {
+        headers: await getAuthHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         setCoverImage(data.url);

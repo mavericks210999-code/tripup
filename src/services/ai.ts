@@ -1,8 +1,16 @@
 import { ItineraryDay } from '@/types';
+import { supabase } from '@/lib/supabase';
 
 export interface MinervaResponse {
   days: ItineraryDay[];
   message?: string;
+}
+
+/** Returns Authorization header with the current Supabase session token. */
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export async function generateItinerary(
@@ -11,7 +19,7 @@ export async function generateItinerary(
 ): Promise<MinervaResponse> {
   const response = await fetch('/api/minerva', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify({ prompt, type: 'generate', context }),
   });
 
@@ -29,7 +37,7 @@ export async function modifyItinerary(
 ): Promise<MinervaResponse> {
   const response = await fetch('/api/minerva', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify({ prompt, type: 'modify', currentItinerary }),
   });
 
@@ -47,7 +55,7 @@ export async function askMinerva(
 ): Promise<string> {
   const response = await fetch('/api/minerva', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify({ prompt, type: 'chat', context }),
   });
 
