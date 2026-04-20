@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Map, Plus, Compass, User } from 'lucide-react';
+import { Home, Map, Plus, Compass, User, Users } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
 interface NavItem {
@@ -38,6 +38,10 @@ export default function FloatingNav() {
     }
   };
 
+  const goToMembers = () => {
+    if (currentTrip?.id) router.push(`/trip/${currentTrip.id}/members`);
+  };
+
   const navItems: NavItem[] = [
     { label: 'Home',    icon: <Home className="w-5 h-5" />,    href: '/home' },
     { label: 'Trip',    icon: <Map className="w-5 h-5" />,     action: goToItinerary },
@@ -47,7 +51,9 @@ export default function FloatingNav() {
       action: () => setMenuOpen(true),
       special: true,
     },
-    { label: 'Explore', icon: <Compass className="w-5 h-5" />, action: goToExplore },
+    onTripPage
+      ? { label: 'Members', icon: <Users className="w-5 h-5" />, action: goToMembers }
+      : { label: 'Explore', icon: <Compass className="w-5 h-5" />, action: goToExplore },
     { label: 'Profile', icon: <User className="w-5 h-5" />,   href: '/profile' },
   ];
 
@@ -74,10 +80,12 @@ export default function FloatingNav() {
           const isActive = item.href
             ? pathname === item.href || pathname.startsWith(item.href + '/')
             : item.label === 'Trip'
-              ? pathname.startsWith('/trip/') && tripTab !== 'explore'
+              ? pathname.startsWith('/trip/') && tripTab !== 'explore' && !pathname.endsWith('/members')
               : item.label === 'Explore'
-                ? pathname.startsWith('/trip/') && tripTab === 'explore' || pathname === '/explore'
-                : false;
+                ? (pathname.startsWith('/trip/') && tripTab === 'explore') || pathname === '/explore'
+                : item.label === 'Members'
+                  ? pathname.endsWith('/members')
+                  : false;
           return (
             <button
               key={i}

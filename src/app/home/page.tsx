@@ -15,8 +15,8 @@ import ShareModal from '@/components/ShareModal';
 
 export default function HomePage() {
   const router = useRouter();
-  const { user, setCurrentTrip, setAllTrips, setMinervaOpen, minervaOpen } = useAppStore();
-  const [trips, setTrips] = useState<Trip[]>([]);
+  const { user, allTrips, setCurrentTrip, setAllTrips, setMinervaOpen, minervaOpen } = useAppStore();
+  const [trips, setTrips] = useState<Trip[]>(allTrips); // seed from persisted store
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [shareTrip, setShareTrip] = useState<Trip | null>(null);
@@ -25,10 +25,23 @@ export default function HomePage() {
     if (!user?.uid) { setLoading(false); return; }
     setLoadError(false);
     getUserTrips(user.uid)
-      .then((t) => { setTrips(t); setAllTrips(t); })
-      .catch(() => setLoadError(true))
+      .then((remote) => {
+        // Merge: keep locally-created trips that aren't in Supabase yet
+        const merged = [
+          ...remote,
+          ...allTrips.filter(lt => !remote.find(rt => rt.id === lt.id)),
+        ];
+        setTrips(merged);
+        setAllTrips(merged);
+      })
+      .catch(() => {
+        // Supabase unavailable — show locally-stored trips so the app still works
+        setTrips(allTrips);
+        setLoadError(false); // don't show error if we have local data
+      })
       .finally(() => setLoading(false));
-  }, [user?.uid, setAllTrips]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]);
 
   const upcomingTrips = trips.filter((t) => t.endDate && new Date(t.endDate) >= new Date());
   const pastTrips = trips.filter((t) => t.endDate && new Date(t.endDate) < new Date());
@@ -88,23 +101,83 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* No trips — first-time empty state */}
+          {/* No trips — first-time empty state + recommendations */}
           {!loading && !loadError && trips.length === 0 && (
-            <div className="text-center py-12 animate-fade-in-up">
-              <div className="w-20 h-20 minerva-gradient rounded-3xl flex items-center justify-center mx-auto mb-5">
-                <MapPin className="w-10 h-10 text-white" />
+            <div className="animate-fade-in-up space-y-6">
+              <div className="text-center py-10">
+                <div className="w-20 h-20 minerva-gradient rounded-3xl flex items-center justify-center mx-auto mb-5">
+                  <MapPin className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-[#1D1D1D] mb-2">No trips yet</h2>
+                <p className="text-gray-500 text-sm mb-6 max-w-xs mx-auto leading-relaxed">
+                  Create your first trip and let Minerva AI plan the perfect itinerary for you
+                </p>
+                <button
+                  onClick={() => router.push('/create-trip')}
+                  className="bg-[#1D1D1D] text-white px-8 py-4 rounded-2xl font-semibold flex items-center gap-2 mx-auto cursor-pointer hover:bg-gray-800 transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                  Plan my first trip
+                </button>
               </div>
-              <h2 className="text-2xl font-bold text-[#1D1D1D] mb-2">No trips yet</h2>
-              <p className="text-gray-500 text-sm mb-8 max-w-xs mx-auto leading-relaxed">
-                Create your first trip and let Minerva AI plan the perfect itinerary for you
-              </p>
-              <button
-                onClick={() => router.push('/create-trip')}
-                className="bg-[#1D1D1D] text-white px-8 py-4 rounded-2xl font-semibold flex items-center gap-2 mx-auto cursor-pointer hover:bg-gray-800 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                Plan my first trip
-              </button>
+
+              {/* Top Recommendations */}
+              <div>
+                <h2 className="text-lg font-bold text-[#1D1D1D] mb-3">Top Recommendations</h2>
+                <div className="flex gap-3 h-52">
+                  {/* Large left card */}
+                  <div
+                    className="relative flex-1 rounded-2xl overflow-hidden cursor-pointer"
+                    onClick={() => router.push('/explore')}
+                  >
+                    <img
+                      src="https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=600&h=500&fit=crop&q=80"
+                      alt="Get inspired"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <p className="text-white text-sm font-semibold leading-tight mb-2">
+                        Get inspired for your next adventure
+                      </p>
+                      <span className="bg-white text-[#1D1D1D] text-xs font-semibold px-3 py-1.5 rounded-full inline-block">
+                        Explore Guides
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right column — two stacked cards */}
+                  <div className="flex flex-col gap-3 w-36">
+                    <div className="relative flex-1 rounded-2xl overflow-hidden cursor-pointer"
+                      onClick={() => router.push('/explore')}
+                    >
+                      <img
+                        src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&h=200&fit=crop&q=80"
+                        alt="Top rated"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      <div className="absolute bottom-2 left-2">
+                        <p className="text-white text-xs font-bold">Top-rated</p>
+                        <p className="text-white/80 text-[10px]">4.6/5</p>
+                      </div>
+                    </div>
+                    <div className="relative flex-1 rounded-2xl overflow-hidden cursor-pointer"
+                      onClick={() => router.push('/explore')}
+                    >
+                      <img
+                        src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300&h=200&fit=crop&q=80"
+                        alt="Hotels"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      <div className="absolute bottom-2 left-2">
+                        <p className="text-white text-xs font-bold">Hotels</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

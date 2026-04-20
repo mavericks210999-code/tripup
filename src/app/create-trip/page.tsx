@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, MapPin, Calendar, Users, Sparkles, Check, Loader2 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { createTrip, updateTripItinerary } from '@/services/trips';
+import { getOrCreateGuestUser } from '@/lib/guestUser';
 import { generateItinerary } from '@/services/ai';
 import { detectCurrency } from '@/lib/currency';
 import AuthGuard from '@/components/AuthGuard';
@@ -58,7 +59,7 @@ const STYLE_OPTIONS = [
 function CreateTripContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, setCurrentTrip } = useAppStore();
+  const { user, setUser, setCurrentTrip, allTrips, setAllTrips } = useAppStore();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -111,10 +112,13 @@ function CreateTripContent() {
     : 0;
 
   const handleCreate = async () => {
-    if (!user) {
-      setError('Session not ready — please wait a moment and try again.');
-      return;
-    }
+    // Always ensure we have a user — fall back to local guest if Supabase auth failed
+    const effectiveUser = user ?? (() => {
+      const guest = getOrCreateGuestUser();
+      setUser(guest);
+      return guest;
+    })();
+
     setLoading(true);
     setError('');
 
@@ -135,18 +139,24 @@ function CreateTripContent() {
         startDate,
         endDate,
         coverImage: await fetchCoverImage(destination),
-        ownerId: user.uid,
+        ownerId: effectiveUser.uid,
         participants: [{
-          id: user.uid,
-          name: user.name,
-          initial: (user.name || 'T')[0].toUpperCase(),
-          photoURL: user.photoURL,
+          id: effectiveUser.uid,
+          name: effectiveUser.name,
+          initial: (effectiveUser.name || 'T')[0].toUpperCase(),
+          photoURL: effectiveUser.photoURL,
         }],
         itinerary: {},
         preferences: { pace: pace as 'relaxed' | 'moderate' | 'packed', budget, style: styles, currency: currency.code },
       };
 
-      const tripId = await createTrip(tripData);
+      // Try Supabase — fall back to a local UUID if auth/RLS blocks it
+      let tripId: string;
+      try {
+        tripId = await createTrip(tripData);
+      } catch {
+        tripId = crypto.randomUUID();
+      }
 
       // Auto-generate itinerary with Minerva using trip preferences
       setLoadingPhase('planning');
@@ -159,9 +169,9 @@ function CreateTripContent() {
           style: `${pace}, ${budget}, ${styles.join(', ')}`,
         });
 
-        const start = new Date(startDate);
+        const startD = new Date(startDate);
         result.days.forEach((day, idx) => {
-          const d = new Date(start);
+          const d = new Date(startD);
           d.setDate(d.getDate() + idx);
           const dayNum = d.getDate();
           itinerary[dayNum] = day.activities.map((act) => ({
@@ -171,12 +181,15 @@ function CreateTripContent() {
           }));
         });
 
-        await updateTripItinerary(tripId, itinerary);
+        try { await updateTripItinerary(tripId, itinerary); } catch { /* local trip */ }
       } catch {
         // Non-fatal — user can generate manually from the trip page
       }
 
-      setCurrentTrip({ id: tripId, ...tripData, itinerary });
+      const fullTrip = { id: tripId, ...tripData, itinerary };
+      setCurrentTrip(fullTrip);
+      // Merge into allTrips so home page shows it even if Supabase was unavailable
+      setAllTrips([fullTrip, ...allTrips.filter(t => t.id !== tripId)]);
       showToast(`${destination} trip created with itinerary! ✈️`);
       router.push(`/trip/${tripId}`);
     } catch (err) {

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { MapPin, Users, Calendar, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { joinTripByCode, getTrip } from '@/services/trips';
+import { getOrCreateGuestUser } from '@/lib/guestUser';
 import { Trip } from '@/types';
 
 export default function JoinTripPage() {
@@ -75,21 +76,17 @@ export default function JoinTripPage() {
   };
 
   const handleJoin = async () => {
-    if (!user) {
-      // Redirect to auth with return URL
-      router.push(`/auth?redirect=/join/${code}`);
-      return;
-    }
+    const effectiveUser = user ?? getOrCreateGuestUser();
     if (!trip) return;
 
     setStatus('joining');
     try {
       await joinTripByCode(code, {
-        id: user.uid,
-        name: user.name || 'Traveler',
-        email: user.email || '',
-        initial: (user.name || 'T')[0].toUpperCase(),
-        photoURL: user.photoURL,
+        id: effectiveUser.uid,
+        name: effectiveUser.name || 'Traveler',
+        email: effectiveUser.email || '',
+        initial: (effectiveUser.name || 'T')[0].toUpperCase(),
+        photoURL: effectiveUser.photoURL,
       });
 
       // Fetch updated trip and navigate
@@ -234,12 +231,6 @@ export default function JoinTripPage() {
           )}
         </div>
 
-        {!user && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-            <p className="text-sm text-amber-700">You need to sign in to join this trip.</p>
-          </div>
-        )}
-
         <button
           onClick={handleJoin}
           disabled={status === 'joining'}
@@ -253,7 +244,7 @@ export default function JoinTripPage() {
           ) : (
             <>
               <Users className="w-5 h-5" />
-              {user ? 'Join this trip' : 'Sign in to join'}
+              Join this trip
             </>
           )}
         </button>

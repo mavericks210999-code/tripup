@@ -60,11 +60,11 @@ body {
 }
 
 @keyframes slideUp {
-  from { transform: translateY(110%); }
-  to { transform: translateY(0); }
+  from { transform: translateX(-50%) translateY(110%); }
+  to { transform: translateX(-50%) translateY(0); }
 }
 .animate-slide-up {
-  animation: slideUp 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+  animation: slideUp 0.38s cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
 @keyframes backdropIn {

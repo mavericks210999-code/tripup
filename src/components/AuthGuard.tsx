@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { supabaseUserToAppUser } from '@/services/auth';
+import { getOrCreateGuestUser } from '@/lib/guestUser';
 import { Sparkles } from 'lucide-react';
 
 /**
@@ -27,10 +28,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // No session — sign in anonymously (no email/password required)
+      // No session — try anonymous sign-in, fall back to local guest user
       const { data, error } = await supabase.auth.signInAnonymously();
       if (data.user && !error) {
         setUser(supabaseUserToAppUser(data.user));
+      } else {
+        // Anonymous auth not enabled or failed — use persistent local guest user
+        setUser(getOrCreateGuestUser());
       }
       setReady(true);
     };

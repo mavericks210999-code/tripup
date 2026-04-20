@@ -203,12 +203,12 @@ function OverviewTab({ trip, tripId, totalActivities, expenses }: { trip: Trip; 
               href={cat.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white rounded-2xl p-4 shadow-soft flex flex-col items-center gap-2 cursor-pointer hover:shadow-card transition-shadow"
+              className="bg-white rounded-2xl p-3 shadow-soft flex flex-col justify-between h-20 cursor-pointer hover:shadow-card transition-shadow relative overflow-hidden"
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${cat.color}`}>
+              <div className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center ${cat.color}`}>
                 {cat.icon}
               </div>
-              <span className="text-xs font-medium text-gray-700">{cat.label}</span>
+              <span className="text-xs font-semibold text-[#1D1D1D] mt-auto">{cat.label}</span>
             </a>
           ))}
         </div>
@@ -631,20 +631,29 @@ function ExpensesTab({ trip, tripId }: { trip: Trip; tripId: string }) {
 export default function TripPage() {
   const params = useParams();
   const tripId = params.id as string;
-  const { currentTrip, setCurrentTrip, tripTab, minervaOpen, setMinervaOpen } = useAppStore();
+  const { currentTrip, allTrips, setCurrentTrip, tripTab, minervaOpen, setMinervaOpen } = useAppStore();
   const [pageTrip, setPageTrip] = useState<Trip | null>(null);
   const [loadingTrip, setLoadingTrip] = useState(true);
   const [expenses, setExpenses] = useState<Expense[]>([]);
 
-  // Load trip
+  // Load trip — prefer store cache, then Supabase, then allTrips fallback
   useEffect(() => {
     const cached = currentTrip?.id === tripId ? currentTrip : null;
     if (cached) { setPageTrip(cached); setLoadingTrip(false); return; }
     getTrip(tripId)
-      .then((t) => { if (t) { setPageTrip(t); setCurrentTrip(t); } })
-      .catch(() => {})
+      .then((t) => {
+        if (t) { setPageTrip(t); setCurrentTrip(t); return; }
+        // Supabase didn't find it — check locally-stored trips
+        const local = allTrips.find(lt => lt.id === tripId);
+        if (local) { setPageTrip(local); setCurrentTrip(local); }
+      })
+      .catch(() => {
+        const local = allTrips.find(lt => lt.id === tripId);
+        if (local) { setPageTrip(local); setCurrentTrip(local); }
+      })
       .finally(() => setLoadingTrip(false));
-  }, [tripId, currentTrip, setCurrentTrip]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripId]);
 
   // Keep pageTrip in sync with store (after Minerva updates itinerary)
   useEffect(() => {
