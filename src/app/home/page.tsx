@@ -22,7 +22,7 @@ export default function HomePage() {
   const [shareTrip, setShareTrip] = useState<Trip | null>(null);
 
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.uid) { setLoading(false); return; }
     setLoadError(false);
     getUserTrips(user.uid)
       .then((t) => { setTrips(t); setAllTrips(t); })
