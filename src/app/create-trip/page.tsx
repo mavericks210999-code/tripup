@@ -67,6 +67,7 @@ function CreateTripContent() {
 
   // Step 1
   const [destination, setDestination] = useState('');
+  const [coverImageUrl, setCoverImageUrl] = useState('');
 
   // Step 2
   const [startDate, setStartDate] = useState('');
@@ -88,6 +89,13 @@ function CreateTripContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (destination.length < 2) { setCoverImageUrl(''); return; }
+    let cancelled = false;
+    fetchCoverImage(destination).then((url) => { if (!cancelled) setCoverImageUrl(url); });
+    return () => { cancelled = true; };
+  }, [destination]);
+
   // Step 3
   const [pace, setPace] = useState('moderate');
   const [budget, setBudget] = useState('mid-range');
@@ -103,7 +111,10 @@ function CreateTripContent() {
     : 0;
 
   const handleCreate = async () => {
-    if (!user) return;
+    if (!user) {
+      setError('Session not ready — please wait a moment and try again.');
+      return;
+    }
     setLoading(true);
     setError('');
 
@@ -128,7 +139,7 @@ function CreateTripContent() {
         participants: [{
           id: user.uid,
           name: user.name,
-          initial: user.name[0].toUpperCase(),
+          initial: (user.name || 'T')[0].toUpperCase(),
           photoURL: user.photoURL,
         }],
         itinerary: {},
@@ -256,7 +267,7 @@ function CreateTripContent() {
               {destination.length > 2 && (
                 <div className="relative h-44 rounded-3xl overflow-hidden shadow-card animate-fade-in-up">
                   <img
-                    src={getCoverImage(destination)}
+                    src={coverImageUrl || getFallbackImage(destination)}
                     alt={destination}
                     className="w-full h-full object-cover"
                   />
