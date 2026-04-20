@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, MapPin, Calendar, Users, Sparkles, Check, Loader2 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
@@ -53,7 +53,7 @@ const STYLE_OPTIONS = [
   { key: 'relaxation', label: 'Beach & Relaxation', emoji: '🏖️' },
 ];
 
-export default function CreateTripPage() {
+function CreateTripContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, setCurrentTrip } = useAppStore();
@@ -462,5 +462,13 @@ export default function CreateTripPage() {
         </div>
       </div>
     </AuthGuard>
+  );
+}
+
+export default function CreateTripPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F5F3F2]" />}>
+      <CreateTripContent />
+    </Suspense>
   );
 }

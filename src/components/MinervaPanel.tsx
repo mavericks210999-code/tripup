@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Sparkles, X, Send, Loader2, Check } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { ItineraryDay } from '@/types';
 import { generateItinerary, askMinerva } from '@/services/ai';
 import { updateTripItinerary } from '@/services/trips';
 import { showToast } from '@/components/Toast';
@@ -28,7 +29,7 @@ export default function MinervaPanel({ tripId, destination, tripDays, travelStyl
   } = useAppStore();
 
   const [input, setInput] = useState('');
-  const [previewDays, setPreviewDays] = useState<{ title: string; activities: { title: string; time?: string; location?: string }[] }[] | null>(null);
+  const [previewDays, setPreviewDays] = useState<ItineraryDay[] | null>(null);
   const [pendingItinerary, setPendingItinerary] = useState<Record<number, unknown[]> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -209,7 +210,7 @@ export default function MinervaPanel({ tripId, destination, tripDays, travelStyl
                 <div className="max-h-40 overflow-y-auto space-y-2 no-scrollbar">
                   {previewDays.map((day, i) => (
                     <div key={i} className="bg-white rounded-xl p-2">
-                      <p className="text-[10px] font-bold text-[#1D1D1D] mb-1">{day.title || `Day ${i + 1}`}</p>
+                      <p className="text-[10px] font-bold text-[#1D1D1D] mb-1">{day.date || `Day ${i + 1}`}</p>
                       {day.activities.map((act, j) => (
                         <div key={j} className="flex items-start gap-1.5 py-0.5">
                           <span className="text-[10px] text-[#607BFF] font-medium w-10 flex-shrink-0">{act.time || '—'}</span>
