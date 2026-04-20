@@ -53,7 +53,7 @@ export default function ProfilePage() {
             )}
             <div className="text-white">
               <h2 className="text-2xl font-bold">{user?.name ?? 'Traveler'}</h2>
-              <p className="text-white/70 text-sm">{user?.email}</p>
+              {user?.email && <p className="text-white/70 text-sm">{user.email}</p>}
             </div>
           </div>
         </div>
