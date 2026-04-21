@@ -3,6 +3,7 @@ export interface User {
   name: string;
   email: string;
   photoURL?: string;
+  isAnonymous?: boolean;
   trips?: number;
   countries?: number;
   memberSince?: string;

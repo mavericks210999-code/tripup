@@ -40,10 +40,12 @@ export async function signInWithEmail(
 
 // ─── OAuth (Google) ───────────────────────────────────────────────────────────
 
-export async function signInWithGoogle(): Promise<void> {
+export async function signInWithGoogle(returnTo?: string): Promise<void> {
+  const base = `${window.location.origin}/auth/callback`;
+  const redirectTo = returnTo ? `${base}?next=${encodeURIComponent(returnTo)}` : base;
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: `${window.location.origin}/auth/callback` },
+    options: { redirectTo },
   });
   if (error) throw error;
   // Redirect happens automatically — no return value needed
@@ -74,5 +76,16 @@ export function supabaseUserToAppUser(supabaseUser: NonNullable<Awaited<ReturnTy
       supabaseUser.user_metadata?.avatar_url ??
       supabaseUser.user_metadata?.picture ??
       undefined,
+    isAnonymous: supabaseUser.is_anonymous ?? false,
   };
+}
+
+export async function sendMagicLink(email: string, redirectTo?: string): Promise<void> {
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: redirectTo ?? `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
+    },
+  });
+  if (error) throw error;
 }

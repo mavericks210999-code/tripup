@@ -20,6 +20,7 @@ import ItineraryCard from '@/components/ItineraryCard';
 import DayModal from '@/components/DayModal';
 import ExpenseCard from '@/components/ExpenseCard';
 import ShareModal from '@/components/ShareModal';
+import SaveTripModal from '@/components/SaveTripModal';
 import { Trip, Activity, Expense } from '@/types';
 import { getAuthHeaders } from '@/lib/clientAuth';
 
@@ -75,10 +76,11 @@ function getCategoryButtons(trip: Trip) {
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 
 function OverviewTab({ trip, tripId, totalActivities, expenses }: { trip: Trip; tripId: string; totalActivities: number; expenses: Expense[] }) {
-  const { setTripTab } = useAppStore();
+  const { setTripTab, user } = useAppStore();
   const router = useRouter();
   const [heroMenuOpen, setHeroMenuOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [saveTripOpen, setSaveTripOpen] = useState(false);
   const currency = detectCurrency(trip.destination);
   const totalSpent = getTotalSpent(expenses);
   const cats = getCategoryButtons(trip);
@@ -141,7 +143,14 @@ function OverviewTab({ trip, tripId, totalActivities, expenses }: { trip: Trip; 
               Edit trip
             </button>
             <button
-              onClick={() => { setHeroMenuOpen(false); setShareOpen(true); }}
+              onClick={() => {
+                setHeroMenuOpen(false);
+                if (user?.isAnonymous !== false) {
+                  setSaveTripOpen(true);
+                } else {
+                  setShareOpen(true);
+                }
+              }}
               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[#222222] hover:bg-gray-50 transition-colors border-t border-gray-100"
             >
               <Share2 className="w-4 h-4 text-gray-500" />
@@ -151,6 +160,12 @@ function OverviewTab({ trip, tripId, totalActivities, expenses }: { trip: Trip; 
         </>
       )}
       {shareOpen && trip && <ShareModal trip={trip} onClose={() => setShareOpen(false)} />}
+      <SaveTripModal
+        open={saveTripOpen}
+        onClose={() => setSaveTripOpen(false)}
+        context="share"
+        returnUrl={`/trip/${tripId}`}
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
