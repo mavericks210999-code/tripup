@@ -8,9 +8,11 @@ interface SaveTripModalProps {
   open: boolean;
   onClose: () => void;
   /** What triggered the modal — drives copy */
-  context?: 'share' | 'save';
+  context?: 'share' | 'save' | 'create';
   /** URL to return to after OAuth redirect */
   returnUrl?: string;
+  /** Called when user explicitly skips — lets the underlying action proceed */
+  onSkip?: () => void;
 }
 
 export default function SaveTripModal({
@@ -18,6 +20,7 @@ export default function SaveTripModal({
   onClose,
   context = 'save',
   returnUrl,
+  onSkip,
 }: SaveTripModalProps) {
   const [view, setView] = useState<'main' | 'email'>('main');
   const [email, setEmail] = useState('');
@@ -56,11 +59,14 @@ export default function SaveTripModal({
     }
   };
 
-  const title = context === 'share' ? 'Share your trip' : 'Save your trip';
+  const title =
+    context === 'share' ? 'Share your trip' :
+    context === 'create' ? 'Save your trip' :
+    'Save your trip';
   const subtitle =
-    context === 'share'
-      ? 'Sign in to invite friends and share your itinerary'
-      : 'Sign in to access your trip from any device';
+    context === 'share' ? 'Sign in to invite friends and share your itinerary' :
+    context === 'create' ? 'Sign in so your trip is saved to your account and never lost' :
+    'Sign in to access your trip from any device';
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
@@ -134,6 +140,15 @@ export default function SaveTripModal({
             </button>
 
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+            {onSkip && (
+              <button
+                onClick={() => { onClose(); onSkip(); }}
+                className="w-full text-center text-sm text-gray-400 hover:text-gray-600 transition-colors py-1 mt-1"
+              >
+                Skip for now
+              </button>
+            )}
 
             <p className="text-center text-xs text-gray-400 mt-2">
               Your trip data is never lost — we just need an account to sync it.

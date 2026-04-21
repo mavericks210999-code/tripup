@@ -9,6 +9,7 @@ import { getOrCreateGuestUser } from '@/lib/guestUser';
 import { generateItinerary } from '@/services/ai';
 import { detectCurrency } from '@/lib/currency';
 import AuthGuard from '@/components/AuthGuard';
+import SaveTripModal from '@/components/SaveTripModal';
 import { showToast } from '@/components/Toast';
 import { getAuthHeaders } from '@/lib/clientAuth';
 import type { Activity } from '@/types';
@@ -65,6 +66,7 @@ function CreateTripContent() {
   const [loading, setLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<'creating' | 'planning'>('creating');
   const [error, setError] = useState('');
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
 
   // Step 1
   const [destination, setDestination] = useState('');
@@ -468,7 +470,13 @@ function CreateTripContent() {
               {error && <p className="text-red-500 text-sm bg-red-50 rounded-xl px-4 py-3">{error}</p>}
 
               <button
-                onClick={handleCreate}
+                onClick={() => {
+                  if (user?.isAnonymous !== false) {
+                    setSaveModalOpen(true);
+                  } else {
+                    handleCreate();
+                  }
+                }}
                 disabled={loading || styles.length === 0}
                 className="w-full bg-[#1D1D1D] text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 hover:bg-gray-800 transition-colors cursor-pointer"
               >
@@ -487,6 +495,13 @@ function CreateTripContent() {
           )}
         </div>
       </div>
+      <SaveTripModal
+        open={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+        context="create"
+        returnUrl="/create-trip"
+        onSkip={handleCreate}
+      />
     </AuthGuard>
   );
 }
