@@ -4,16 +4,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAppStore } from '@/store/useAppStore';
 import { supabaseUserToAppUser } from '@/services/auth';
-import { getOrCreateGuestUser } from '@/lib/guestUser';
 import { Sparkles } from 'lucide-react';
 
-/**
- * AuthGuard — auto-signs users in anonymously if they have no session.
- * No login page, no redirect. Users just land and start using the app.
- *
- * Anonymous sessions are real Supabase sessions with a valid JWT and uid,
- * so Supabase RLS, API auth, and rate limiting all work transparently.
- */
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const { setUser } = useAppStore();
   const [ready, setReady] = useState(false);
@@ -21,32 +13,14 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        setUser(supabaseUserToAppUser(session.user));
-        setReady(true);
-        return;
-      }
-
-      // No session — try anonymous sign-in, fall back to local guest user
-      const { data, error } = await supabase.auth.signInAnonymously();
-      if (data.user && !error) {
-        setUser(supabaseUserToAppUser(data.user));
-      } else {
-        // Anonymous auth not enabled or failed — use persistent local guest user
-        setUser(getOrCreateGuestUser());
-      }
+      setUser(session?.user ? supabaseUserToAppUser(session.user) : null);
       setReady(true);
     };
 
     init();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(supabaseUserToAppUser(session.user));
-      } else {
-        setUser(null);
-      }
+      setUser(session?.user ? supabaseUserToAppUser(session.user) : null);
     });
 
     return () => subscription.unsubscribe();

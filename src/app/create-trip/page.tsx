@@ -5,11 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, MapPin, Calendar, Users, Sparkles, Check, Loader2 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { createTrip, updateTripItinerary } from '@/services/trips';
-import { getOrCreateGuestUser } from '@/lib/guestUser';
 import { generateItinerary } from '@/services/ai';
 import { detectCurrency } from '@/lib/currency';
+import { supabase } from '@/lib/supabase';
 import AuthGuard from '@/components/AuthGuard';
-import SaveTripModal from '@/components/SaveTripModal';
 import { showToast } from '@/components/Toast';
 import { getAuthHeaders } from '@/lib/clientAuth';
 import type { Activity } from '@/types';
@@ -21,18 +20,14 @@ async function fetchCoverImage(destination: string): Promise<string> {
     const res = await fetch(`/api/destination-image?destination=${encodeURIComponent(destination)}`, { headers });
     if (res.ok) {
       const data = await res.json();
-      return data.url || getFallbackImage(destination);
+      return data.url || getFallbackImage();
     }
   } catch { /* fall through */ }
-  return getFallbackImage(destination);
+  return getFallbackImage();
 }
 
-function getFallbackImage(destination: string): string {
+function getFallbackImage(): string {
   return `https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&h=500&fit=crop&q=80`;
-}
-
-function getCoverImage(destination: string): string {
-  return getFallbackImage(destination);
 }
 
 // ─── Travel style options ─────────────────────────────────────────────────────
@@ -60,13 +55,12 @@ const STYLE_OPTIONS = [
 function CreateTripContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, setUser, setCurrentTrip, allTrips, setAllTrips } = useAppStore();
+  const { user, setCurrentTrip, allTrips, setAllTrips } = useAppStore();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<'creating' | 'planning'>('creating');
   const [error, setError] = useState('');
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
 
   // Step 1
   const [destination, setDestination] = useState('');
@@ -92,6 +86,15 @@ function CreateTripContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Redirect to login if no session — this page requires auth
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.replace('/auth?redirect=/create-trip');
+      }
+    });
+  }, [router]);
+
   useEffect(() => {
     if (destination.length < 2) { setCoverImageUrl(''); return; }
     let cancelled = false;
@@ -114,12 +117,10 @@ function CreateTripContent() {
     : 0;
 
   const handleCreate = async () => {
-    // Always ensure we have a user — fall back to local guest if Supabase auth failed
-    const effectiveUser = user ?? (() => {
-      const guest = getOrCreateGuestUser();
-      setUser(guest);
-      return guest;
-    })();
+    if (!user) {
+      router.replace('/auth?redirect=/create-trip');
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -141,26 +142,20 @@ function CreateTripContent() {
         startDate,
         endDate,
         coverImage: await fetchCoverImage(destination),
-        ownerId: effectiveUser.uid,
+        ownerId: user.uid,
         participants: [{
-          id: effectiveUser.uid,
-          name: effectiveUser.name,
-          initial: (effectiveUser.name || 'T')[0].toUpperCase(),
-          photoURL: effectiveUser.photoURL,
+          id: user.uid,
+          name: user.name,
+          initial: (user.name || 'T')[0].toUpperCase(),
+          photoURL: user.photoURL,
         }],
         itinerary: {},
         preferences: { pace: pace as 'relaxed' | 'moderate' | 'packed', budget, style: styles, currency: currency.code },
       };
 
-      // Try Supabase — fall back to a local UUID if auth/RLS blocks it
-      let tripId: string;
-      try {
-        tripId = await createTrip(tripData);
-      } catch {
-        tripId = crypto.randomUUID();
-      }
+      const tripId = await createTrip(tripData);
 
-      // Auto-generate itinerary with Minerva using trip preferences
+      // Auto-generate itinerary with Minerva
       setLoadingPhase('planning');
       let itinerary: Record<number, Activity[]> = {};
       try {
@@ -183,18 +178,21 @@ function CreateTripContent() {
           }));
         });
 
-        try { await updateTripItinerary(tripId, itinerary); } catch { /* local trip */ }
-      } catch {
-        // Non-fatal — user can generate manually from the trip page
+        await updateTripItinerary(tripId, itinerary);
+      } catch (aiErr) {
+        console.error('Minerva generation failed:', aiErr);
+        showToast('Trip created! AI planning failed — you can generate it from the trip page.', 'error');
       }
 
       const fullTrip = { id: tripId, ...tripData, itinerary };
       setCurrentTrip(fullTrip);
-      // Merge into allTrips so home page shows it even if Supabase was unavailable
       setAllTrips([fullTrip, ...allTrips.filter(t => t.id !== tripId)]);
-      showToast(`${destination} trip created with itinerary! ✈️`);
+      if (Object.keys(itinerary).length > 0) {
+        showToast(`${destination} trip created with itinerary! ✈️`);
+      }
       router.push(`/trip/${tripId}`);
     } catch (err) {
+      console.error('Trip creation failed:', err);
       setError('Failed to create trip. Please try again.');
     } finally {
       setLoading(false);
@@ -282,7 +280,7 @@ function CreateTripContent() {
               {destination.length > 2 && (
                 <div className="relative h-44 rounded-3xl overflow-hidden shadow-card animate-fade-in-up">
                   <img
-                    src={coverImageUrl || getFallbackImage(destination)}
+                    src={coverImageUrl || getFallbackImage()}
                     alt={destination}
                     className="w-full h-full object-cover"
                   />
@@ -470,13 +468,7 @@ function CreateTripContent() {
               {error && <p className="text-red-500 text-sm bg-red-50 rounded-xl px-4 py-3">{error}</p>}
 
               <button
-                onClick={() => {
-                  if (user?.isAnonymous !== false) {
-                    setSaveModalOpen(true);
-                  } else {
-                    handleCreate();
-                  }
-                }}
+                onClick={handleCreate}
                 disabled={loading || styles.length === 0}
                 className="w-full bg-[#1D1D1D] text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 hover:bg-gray-800 transition-colors cursor-pointer"
               >
@@ -495,13 +487,6 @@ function CreateTripContent() {
           )}
         </div>
       </div>
-      <SaveTripModal
-        open={saveModalOpen}
-        onClose={() => setSaveModalOpen(false)}
-        context="create"
-        returnUrl="/create-trip"
-        onSkip={handleCreate}
-      />
     </AuthGuard>
   );
 }

@@ -61,23 +61,53 @@ export default function HomePage() {
           {/* Header */}
           <header className="flex justify-between items-start pt-2">
             <div>
-              <p className="text-gray-500 text-sm">Welcome back!</p>
+              <p className="text-gray-500 text-sm">{user ? 'Welcome back!' : 'Plan your next adventure'}</p>
               <h1 className="text-3xl font-bold text-[#1D1D1D] mt-0.5">
-                {user?.name?.split(' ')[0] || 'Traveler'} 👋
+                {user ? `${user.name?.split(' ')[0] || 'Traveler'} 👋` : 'TripUp ✈️'}
               </h1>
             </div>
             <div className="flex items-center gap-2">
               <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-soft cursor-pointer hover:shadow-card transition-shadow">
                 <Search className="w-5 h-5 text-gray-600" />
               </button>
-              <button
-                onClick={() => setMinervaOpen(true)}
-                className="w-10 h-10 minerva-gradient rounded-full flex items-center justify-center shadow-soft cursor-pointer"
-              >
-                <Sparkles className="w-5 h-5 text-white" />
-              </button>
+              {user && (
+                <button
+                  onClick={() => setMinervaOpen(true)}
+                  className="w-10 h-10 minerva-gradient rounded-full flex items-center justify-center shadow-soft cursor-pointer"
+                >
+                  <Sparkles className="w-5 h-5 text-white" />
+                </button>
+              )}
             </div>
           </header>
+
+          {/* Sign-in CTA — shown only when not logged in */}
+          {!user && !loading && (
+            <div className="animate-fade-in-up">
+              <div className="bg-white rounded-3xl p-6 shadow-soft text-center">
+                <div className="w-16 h-16 minerva-gradient rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Sparkles className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-[#1D1D1D] mb-2">AI-powered trip planning</h2>
+                <p className="text-gray-500 text-sm mb-5 leading-relaxed">
+                  Sign in to create trips, get personalized AI itineraries, and plan with friends
+                </p>
+                <button
+                  onClick={() => router.push('/auth?redirect=/create-trip')}
+                  className="w-full bg-[#1D1D1D] text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors cursor-pointer mb-3"
+                >
+                  <Plus className="w-5 h-5" />
+                  Get started — it&apos;s free
+                </button>
+                <button
+                  onClick={() => router.push('/auth')}
+                  className="w-full text-[#607BFF] text-sm font-semibold py-2"
+                >
+                  Already have an account? Sign in
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Loading skeleton */}
           {loading && (
@@ -101,8 +131,8 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* No trips — first-time empty state + recommendations */}
-          {!loading && !loadError && trips.length === 0 && (
+          {/* No trips — first-time empty state + recommendations (logged in but no trips) */}
+          {!loading && !loadError && user && trips.length === 0 && (
             <div className="animate-fade-in-up space-y-6">
               <div className="text-center py-10">
                 <div className="w-20 h-20 minerva-gradient rounded-3xl flex items-center justify-center mx-auto mb-5">
@@ -209,7 +239,7 @@ export default function HomePage() {
           )}
 
           {/* Minerva CTA */}
-          {!loading && !loadError && (
+          {!loading && !loadError && user && (
             <button
               onClick={() => setMinervaOpen(true)}
               className="w-full bg-white rounded-2xl p-4 shadow-soft flex items-center justify-between cursor-pointer hover:shadow-card transition-shadow"
@@ -228,7 +258,7 @@ export default function HomePage() {
           )}
 
           {/* Create new trip card (when user already has trips) */}
-          {!loading && !loadError && trips.length > 0 && (
+          {!loading && !loadError && user && trips.length > 0 && (
             <button
               onClick={() => router.push('/create-trip')}
               className="w-full bg-white rounded-2xl p-4 shadow-soft flex items-center justify-between cursor-pointer hover:shadow-card transition-shadow"

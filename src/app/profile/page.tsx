@@ -21,7 +21,7 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     await signOut();
     setUser(null);
-    router.replace('/');
+    router.replace('/auth');
   };
 
   const menuItems = [
