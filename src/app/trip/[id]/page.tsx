@@ -538,7 +538,7 @@ function ExpensesTab({ trip, tripId }: { trip: Trip; tripId: string }) {
   useEffect(() => {
     getTripExpenses(tripId)
       .then(setExpenses)
-      .catch(() => {})
+      .catch((err) => console.error('Failed to load expenses:', err))
       .finally(() => setLoading(false));
   }, [tripId]);
 

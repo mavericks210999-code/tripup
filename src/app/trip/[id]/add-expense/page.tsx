@@ -274,6 +274,10 @@ export default function AddExpensePage() {
     setSaving(true);
     setError('');
     const paidByParticipant = trip.participants.find((p) => p.id === paidById) ?? trip.participants[0];
+    const effectiveSplit = split.length > 0 ? split : trip.participants.map(p => ({
+      participantId: p.id,
+      amount: +(numAmount / trip.participants.length).toFixed(2),
+    }));
     try {
       await addExpense({
         tripId,
@@ -283,13 +287,15 @@ export default function AddExpensePage() {
         paidBy:       paidByParticipant.id,
         paidByName:   paidByParticipant.name,
         date:         new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
-        split,
+        split:        effectiveSplit,
       });
       showToast('Expense added');
       router.back();
-    } catch {
+    } catch (err) {
+      console.error('Failed to save expense:', err);
+      const msg = err instanceof Error ? err.message : String(err);
       showToast('Failed to save expense', 'error');
-      setError('Failed to save. Please try again.');
+      setError(msg || 'Failed to save. Please try again.');
       setSaving(false);
     }
   };

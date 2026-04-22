@@ -15,6 +15,7 @@ export interface Participant {
   email?: string;
   photoURL?: string;
   initial: string;
+  role?: 'editor' | 'viewer';
 }
 
 export interface Activity {

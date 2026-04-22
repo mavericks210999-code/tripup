@@ -31,7 +31,7 @@ export default function JoinTripPage() {
       const { data, error } = await supabase
         .from('trips')
         .select('*')
-        .eq('invite_code', inviteCode)
+        .eq('invite_code', inviteCode.toUpperCase())
         .single();
 
       if (error || !data) {

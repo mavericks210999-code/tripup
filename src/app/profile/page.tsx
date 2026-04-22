@@ -9,7 +9,7 @@ import { ArrowLeft, User, Bell, Shield, CreditCard, HelpCircle, LogOut, ChevronR
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, setUser, allTrips } = useAppStore();
+  const { user, setUser, allTrips, setAllTrips, setCurrentTrip, clearMinervaMessages } = useAppStore();
 
   // Use cached allTrips from store; derive unique countries visited
   const tripCount = allTrips.length;
@@ -21,6 +21,9 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     await signOut();
     setUser(null);
+    setAllTrips([]);
+    setCurrentTrip(null);
+    clearMinervaMessages();
     router.replace('/auth');
   };
 
