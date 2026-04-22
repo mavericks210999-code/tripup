@@ -8,7 +8,9 @@ import {
   signInWithEmail,
   signUpWithEmail,
   signInWithGoogle,
+  supabaseUserToAppUser,
 } from '@/services/auth';
+import { joinTripByCode } from '@/services/trips';
 import { Sparkles, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function AuthPage() {
@@ -20,10 +22,10 @@ export default function AuthPage() {
       ? new URLSearchParams(window.location.search).get('redirect') || '/home'
       : '/home';
 
-  // Redirect already-authenticated users away from the auth page
+  // Redirect only real (non-anonymous) users away from the auth page
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) router.replace(redirectTo);
+      if (session?.user?.email) router.replace(redirectTo);
     });
   }, [router, redirectTo]);
 
@@ -53,17 +55,36 @@ export default function AuthPage() {
     }
   };
 
+  const completeJoinIfPending = async (appUser: ReturnType<typeof supabaseUserToAppUser>) => {
+    const pendingCode = localStorage.getItem('pendingInviteCode');
+    if (!pendingCode) return null;
+    localStorage.removeItem('pendingInviteCode');
+    try {
+      const tripId = await joinTripByCode(pendingCode, {
+        id: appUser.uid,
+        name: appUser.name || 'Traveler',
+        email: appUser.email || '',
+        initial: (appUser.name || 'T')[0].toUpperCase(),
+        photoURL: appUser.photoURL,
+      });
+      return tripId;
+    } catch {
+      return null;
+    }
+  };
+
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const user =
+      const appUser =
         mode === 'login'
           ? await signInWithEmail(email, password)
           : await signUpWithEmail(email, password, name);
-      setUser(user);
-      router.replace(redirectTo);
+      setUser(appUser);
+      const tripId = await completeJoinIfPending(appUser);
+      router.replace(tripId ? `/trip/${tripId}` : redirectTo);
     } catch (err: unknown) {
       setError(
         err instanceof Error

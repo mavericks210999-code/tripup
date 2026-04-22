@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { joinTripByCode } from '@/services/trips';
+import { supabaseUserToAppUser } from '@/services/auth';
 import { Sparkles } from 'lucide-react';
 
 /**
@@ -22,13 +24,29 @@ export default function AuthCallbackPage() {
     }
 
     const redirectTo = new URLSearchParams(window.location.search).get('next') || '/home';
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+    supabase.auth.exchangeCodeForSession(code).then(async ({ data, error }) => {
       if (error) {
         console.error('OAuth callback error:', error.message);
         router.replace('/auth?error=oauth_failed');
-      } else {
-        router.replace(redirectTo);
+        return;
       }
+      // Handle pending trip join from invite link
+      const pendingCode = localStorage.getItem('pendingInviteCode');
+      if (pendingCode && data.session?.user) {
+        localStorage.removeItem('pendingInviteCode');
+        const appUser = supabaseUserToAppUser(data.session.user);
+        try {
+          const tripId = await joinTripByCode(pendingCode, {
+            id: appUser.uid,
+            name: appUser.name || 'Traveler',
+            email: appUser.email || '',
+            initial: (appUser.name || 'T')[0].toUpperCase(),
+            photoURL: appUser.photoURL,
+          });
+          if (tripId) { router.replace(`/trip/${tripId}`); return; }
+        } catch { /* fall through to normal redirect */ }
+      }
+      router.replace(redirectTo);
     });
   }, [router]);
 
