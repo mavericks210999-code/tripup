@@ -28,7 +28,6 @@ interface ItineraryCardProps {
 
 export default function ItineraryCard({
   dayNumber,
-  dayLabel,
   month,
   activities,
   tripId,
@@ -56,11 +55,11 @@ export default function ItineraryCard({
   };
 
   return (
-    <div>
+    <div className="bg-white rounded-3xl p-5 shadow-soft">
       {/* Day header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-bold text-[#1D1D1D]">{month} {dayNumber}</h3>
+          <h3 className="font-bold text-lg text-[#1D1D1D]">{month} {dayNumber}</h3>
           {isToday && (
             <span className="px-3 py-1 bg-[#607BFF] text-white text-xs font-semibold rounded-full">
               Ongoing
@@ -76,58 +75,77 @@ export default function ItineraryCard({
         </button>
       </div>
 
-      {/* Timeline */}
-      <div className="relative" style={{ paddingLeft: '40px' }}>
-        {/* Vertical dashed line */}
-        <div
-          className="absolute"
-          style={{ left: '19px', top: 0, bottom: 0, borderLeft: '2px dashed #D1D5DB' }}
-        />
+      {/* Divider */}
+      <div className="h-px bg-gray-100 mb-5" />
 
-        {activities.length === 0 ? (
-          <div className="text-center py-8">
-            <MapPin className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-            <p className="text-xs text-gray-400">No activities planned yet</p>
-            <button onClick={onAddPlace} className="mt-3 text-xs text-[#607BFF] font-medium">
-              + Add a place
-            </button>
-          </div>
-        ) : (
-          <div>
-            {activities.map((item) => (
-              <div key={item.id} className="relative mb-1">
+      {activities.length === 0 ? (
+        <div className="text-center py-6">
+          <MapPin className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+          <p className="text-xs text-gray-400">No activities planned yet</p>
+          <button onClick={onAddPlace} className="mt-3 text-xs text-[#607BFF] font-medium">
+            + Add a place
+          </button>
+        </div>
+      ) : (
+        /* Timeline container — left padding makes room for dots + line */
+        <div className="relative pl-10">
+          {/* Dashed vertical line */}
+          <div
+            className="absolute top-0 bottom-0 border-l-2 border-dashed border-gray-200"
+            style={{ left: '19px' }}
+          />
+
+          {activities.map((item) => {
+            const isHighlight = !!item.highlight && !item.completed;
+
+            return (
+              <div key={item.id} className="relative">
                 {/* Timeline dot */}
                 <div
                   className={`absolute z-10 flex items-center justify-center rounded-full ${
                     item.completed
                       ? 'bg-[#1D1D1D]'
-                      : item.highlight
+                      : isHighlight
                       ? 'bg-[#607BFF]'
                       : 'bg-gray-400'
                   }`}
-                  style={{ left: '-30px', top: '8px', width: '20px', height: '20px' }}
+                  style={{
+                    left: isHighlight ? '-31px' : '-30px',
+                    top: '6px',
+                    width: isHighlight ? '22px' : '20px',
+                    height: isHighlight ? '22px' : '20px',
+                  }}
                 >
                   {item.completed ? (
                     <Check className="w-3 h-3 text-white" />
                   ) : (
-                    <div className="w-2.5 h-2.5 bg-white rounded-full" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-white" />
                   )}
                 </div>
 
-                {/* Time label */}
-                <div className="text-sm font-bold text-[#1D1D1D] mb-2">{item.time}</div>
+                {/* Time */}
+                <p className="text-sm font-bold text-[#1D1D1D] mb-2">{item.time}</p>
 
-                {/* Activity card */}
+                {/* Inner activity card */}
                 <div
-                  className={`bg-white rounded-3xl p-4 shadow-soft mb-1 group ${
-                    item.highlight ? 'border-l-4 border-[#607BFF]' : ''
+                  className={`rounded-2xl p-4 mb-1 relative overflow-hidden group ${
+                    isHighlight
+                      ? 'bg-white border border-[#607BFF]/40'
+                      : 'bg-gray-50'
                   }`}
                 >
+                  {/* Blue left accent stripe for highlighted */}
+                  {isHighlight && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#607BFF] rounded-l-2xl" />
+                  )}
+
+                  {/* Category row */}
                   <div className="flex items-start justify-between mb-2">
-                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">
+                    <span className="text-[11px] text-gray-400 uppercase tracking-wider font-medium leading-none">
                       {item.category}
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                      {/* Hover actions */}
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                         <button
                           onClick={() => toggleComplete(item)}
@@ -143,9 +161,10 @@ export default function ItineraryCard({
                           Remove
                         </button>
                       </div>
+                      {/* Icon */}
                       <div
                         className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          item.highlight ? 'bg-[#607BFF]/10 text-[#607BFF]' : 'bg-pink-100 text-pink-500'
+                          isHighlight ? 'bg-gray-100 text-gray-500' : 'bg-pink-100 text-pink-500'
                         }`}
                       >
                         {ICON_MAP[item.icon || 'map-pin'] || <MapPin className="w-4 h-4" />}
@@ -153,43 +172,60 @@ export default function ItineraryCard({
                     </div>
                   </div>
 
+                  {/* Title */}
                   <h3
-                    className={`text-xl font-bold leading-tight ${
+                    className={`text-xl font-bold leading-tight mb-1.5 ${
                       item.completed ? 'text-gray-400 line-through' : 'text-[#1D1D1D]'
                     }`}
                   >
                     {item.title}
                   </h3>
 
-                  <div className="flex items-end justify-between mt-1.5">
-                    <div>
-                      {item.location && (
-                        <p className="text-xs text-gray-500">{item.location}</p>
-                      )}
-                      {item.autoAdded && (
-                        <p className="text-[10px] text-gray-400 mt-1 italic">Auto added from poll</p>
-                      )}
-                    </div>
+                  {/* Location + notes row */}
+                  <div className="flex items-end justify-between gap-2 min-w-0">
+                    {item.location && (
+                      <p className="text-xs text-gray-500 leading-relaxed flex-1 min-w-0 truncate">
+                        {item.location}
+                      </p>
+                    )}
                     {item.notes && (
-                      <p className="text-xs text-gray-400 text-right ml-2 flex-shrink-0">{item.notes}</p>
+                      <p className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
+                        {item.notes}
+                      </p>
                     )}
                   </div>
+
+                  {/* Auto-added label */}
+                  {item.autoAdded && (
+                    <p className="text-[10px] text-gray-400 text-center mt-3 italic">
+                      Auto added from poll
+                    </p>
+                  )}
                 </div>
 
                 {/* Transport note between activities */}
                 {item.transportNote && (
-                  <div className="flex items-center gap-2 text-xs text-gray-500 py-3 mb-1">
-                    <div className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
-                    <span>{item.transportNote}</span>
-                    <Car className="w-3 h-3 flex-shrink-0" />
-                    {item.transportTime && <span className="text-gray-400">{item.transportTime}</span>}
+                  <div className="relative flex items-center gap-2 py-3 text-xs text-gray-500">
+                    {/* Small dot on the timeline */}
+                    <div
+                      className="absolute z-10 w-2.5 h-2.5 bg-gray-400 rounded-full"
+                      style={{ left: '-25px' }}
+                    />
+                    <span className="truncate">{item.transportNote}</span>
+                    {item.transportTime && (
+                      <>
+                        <span className="flex-shrink-0">▾</span>
+                        <Car className="w-3 h-3 flex-shrink-0" />
+                        <span className="flex-shrink-0">{item.transportTime}</span>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
