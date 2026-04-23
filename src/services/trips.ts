@@ -170,16 +170,19 @@ export async function joinTripByCode(
   inviteCode: string,
   participant: Participant
 ): Promise<string | null> {
-  const { data, error } = await supabase
-    .from('trips')
-    .select('id, participants')
-    .eq('invite_code', inviteCode.toUpperCase())
-    .single<Pick<TripRow, 'id' | 'participants'>>();
+  const { data, error } = await supabase.rpc('join_trip_by_code', {
+    p_invite_code: inviteCode.toUpperCase(),
+    p_name: participant.name,
+    p_email: participant.email,
+    p_initial: participant.initial,
+    p_photo_url: participant.photoURL ?? null,
+  });
 
-  if (error || !data) return null;
-
-  await addParticipant(data.id, participant, data.participants ?? []);
-  return data.id;
+  if (error) {
+    console.error('[joinTripByCode] RPC error:', error);
+    return null;
+  }
+  return (data as string | null) ?? null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

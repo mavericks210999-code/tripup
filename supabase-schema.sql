@@ -92,3 +92,76 @@ CREATE POLICY "expenses: trip members full access"
 -- ─── Realtime (optional — enable for live group sync) ────────────────────────
 -- ALTER PUBLICATION supabase_realtime ADD TABLE public.trips;
 -- ALTER PUBLICATION supabase_realtime ADD TABLE public.expenses;
+
+
+-- ─── Run this in Supabase SQL Editor after existing schema. ───────────────────
+
+-- join_trip_by_code: SECURITY DEFINER RPC
+--
+-- WHY THIS EXISTS: Supabase RLS on the trips table requires a user to already
+-- be in the participants array before they can SELECT the row, and only the
+-- owner can UPDATE it. A fresh invitee is neither owner nor participant, so
+-- the normal client-side join flow is a chicken-and-egg deadlock — the client
+-- cannot read the trip to learn its id, and cannot write participants without
+-- already being one. Running this function as SECURITY DEFINER lets it bypass
+-- RLS entirely while still enforcing auth (the caller must be authenticated)
+-- and performing the membership check itself, keeping the logic safe.
+
+CREATE OR REPLACE FUNCTION public.join_trip_by_code(
+  p_invite_code TEXT,
+  p_name        TEXT,
+  p_email       TEXT,
+  p_initial     TEXT,
+  p_photo_url   TEXT DEFAULT NULL
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_trip_id   UUID;
+  v_caller_id TEXT := auth.uid()::text;
+BEGIN
+  -- Caller must be authenticated
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  -- Look up the trip by invite code (case-insensitive: normalise to upper)
+  SELECT id INTO v_trip_id
+  FROM public.trips
+  WHERE invite_code = UPPER(p_invite_code)
+  LIMIT 1;
+
+  IF v_trip_id IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  -- Idempotent: if caller is already a participant, return without modifying
+  IF EXISTS (
+    SELECT 1 FROM public.trips
+    WHERE id = v_trip_id
+      AND participants @> jsonb_build_array(jsonb_build_object('id', v_caller_id))
+  ) THEN
+    RETURN v_trip_id;
+  END IF;
+
+  -- Append the new participant
+  UPDATE public.trips
+  SET participants = participants || jsonb_build_object(
+    'id',       v_caller_id,
+    'name',     p_name,
+    'email',    p_email,
+    'initial',  p_initial,
+    'photoURL', p_photo_url
+  )
+  WHERE id = v_trip_id;
+
+  RETURN v_trip_id;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.join_trip_by_code(TEXT, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION public.join_trip_by_code(TEXT, TEXT, TEXT, TEXT, TEXT) TO authenticated;
+GRANT  EXECUTE ON FUNCTION public.join_trip_by_code(TEXT, TEXT, TEXT, TEXT, TEXT) TO anon;

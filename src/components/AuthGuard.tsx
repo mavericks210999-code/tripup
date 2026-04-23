@@ -12,7 +12,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      let { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        const { data } = await supabase.auth.signInAnonymously();
+        session = data.session;
+      }
       setUser(session?.user ? supabaseUserToAppUser(session.user) : null);
       setReady(true);
     };

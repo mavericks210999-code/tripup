@@ -83,17 +83,37 @@ export default function JoinTripPage() {
     if (user?.email) {
       setStatus('joining');
       try {
-        await joinTripByCode(code, {
+        // Ensure a valid session exists before calling the RPC
+        let { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          const { data } = await supabase.auth.signInAnonymously();
+          session = data.session;
+          if (session?.user) setUser(supabaseUserToAppUser(session.user));
+        }
+        if (!session?.user?.id) {
+          setStatus('error');
+          setErrorMsg('Could not establish a session. Please try again.');
+          return;
+        }
+
+        const tripId = await joinTripByCode(code, {
           id: user.uid,
           name: user.name || 'Traveler',
           email: user.email,
           initial: (user.name || 'T')[0].toUpperCase(),
           photoURL: user.photoURL,
         });
-        const updated = await getTrip(trip.id);
+
+        if (!tripId) {
+          setStatus('error');
+          setErrorMsg('This invite link is invalid or expired.');
+          return;
+        }
+
+        const updated = await getTrip(tripId);
         if (updated) setCurrentTrip(updated);
         setStatus('joined');
-        setTimeout(() => router.push(`/trip/${trip.id}`), 1500);
+        setTimeout(() => router.push(`/trip/${tripId}`), 1500);
       } catch {
         setStatus('error');
         setErrorMsg('Failed to join the trip. Please try again.');
