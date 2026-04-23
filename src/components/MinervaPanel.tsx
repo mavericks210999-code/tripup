@@ -94,7 +94,7 @@ export default function MinervaPanel({ tripId, destination, tripDays, travelStyl
         addMinervaMessage({ role: 'assistant', content: reply, timestamp: Date.now() });
       }
     } catch (err) {
-      showToast('Minerva ran into an issue. Please try again.', 'error');
+      showToast('Aurora ran into an issue. Please try again.', 'error');
       addMinervaMessage({
         role: 'assistant',
         content: 'Sorry, I had trouble with that. Please try again!',
@@ -153,7 +153,7 @@ export default function MinervaPanel({ tripId, destination, tripDays, travelStyl
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-sm">Minerva</h3>
+                <h3 className="text-white font-semibold text-sm">Aurora</h3>
                 <p className="text-white/70 text-xs">AI Travel Assistant</p>
               </div>
             </div>
@@ -244,7 +244,7 @@ export default function MinervaPanel({ tripId, destination, tripDays, travelStyl
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Ask Minerva..."
+                placeholder="Ask Aurora..."
                 className="flex-1 bg-gray-100 rounded-full px-3 py-2 text-xs outline-none"
               />
               <button

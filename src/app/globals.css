@@ -35,7 +35,7 @@ body {
 }
 
 .minerva-gradient {
-  background: linear-gradient(135deg, #4ADE80 0%, #3B82F6 50%, #A855F7 100%);
+  background: linear-gradient(135deg, #f472b6 0%, #a855f7 30%, #6366f1 60%, #22d3ee 100%);
 }
 
 /* Airbnb-inspired three-layer shadow system */

@@ -34,7 +34,7 @@ export default function TripCard({ trip, onPress, onDelete, onShare, onEdit }: T
     `https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80`;
 
   return (
-    <>
+    <div className="relative">
       <div
         onClick={onPress}
         className="relative h-52 rounded-3xl overflow-hidden shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.06)_0px_4px_12px,rgba(0,0,0,0.1)_0px_8px_20px] cursor-pointer group"
@@ -98,8 +98,8 @@ export default function TripCard({ trip, onPress, onDelete, onShare, onEdit }: T
       {menuOpen && (
         <>
           <div className="fixed inset-0 z-50" onClick={() => setMenuOpen(false)} />
-          <div className="fixed z-50 bg-white rounded-2xl shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.08)_0px_8px_24px] overflow-hidden w-48"
-            style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+          <div className="absolute z-50 bg-white rounded-2xl shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.08)_0px_8px_24px] overflow-hidden w-48"
+            style={{ top: '48px', right: '8px' }}
           >
             <div className="p-3 border-b border-gray-100 flex items-center justify-between">
               <span className="text-sm font-semibold text-[#222222]">{trip.destination}</span>
@@ -142,7 +142,7 @@ export default function TripCard({ trip, onPress, onDelete, onShare, onEdit }: T
       {confirmDelete && (
         <>
           <div className="fixed inset-0 bg-black/50 z-50 animate-backdrop" onClick={() => setConfirmDelete(false)} />
-          <div className="fixed z-50 bg-white rounded-3xl p-6 shadow-2xl w-[calc(100%-48px)] max-w-sm"
+          <div className="fixed z-[60] bg-white rounded-3xl p-6 shadow-2xl w-[calc(100%-48px)] max-w-sm"
             style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
           >
             <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -170,6 +170,6 @@ export default function TripCard({ trip, onPress, onDelete, onShare, onEdit }: T
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }

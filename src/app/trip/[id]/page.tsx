@@ -95,6 +95,7 @@ function OverviewTab({ trip, tripId, totalActivities, expenses }: { trip: Trip; 
   return (
     <div className="p-5 space-y-5 pb-10">
       {/* Cover */}
+      <div className="relative">
       <div className="relative h-52 rounded-3xl overflow-hidden shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.06)_0px_4px_12px,rgba(0,0,0,0.1)_0px_8px_20px]">
         <img
           src={trip.coverImage || `https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&h=500&fit=crop&q=80`}
@@ -132,8 +133,8 @@ function OverviewTab({ trip, tripId, totalActivities, expenses }: { trip: Trip; 
       {heroMenuOpen && (
         <>
           <div className="fixed inset-0 z-50" onClick={() => setHeroMenuOpen(false)} />
-          <div className="fixed z-50 bg-white rounded-2xl shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.1)_0px_8px_24px] overflow-hidden w-44"
-            style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+          <div className="absolute z-50 bg-white rounded-2xl shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.1)_0px_8px_24px] overflow-hidden w-44"
+            style={{ top: '48px', right: '8px' }}
           >
             <button
               onClick={() => { setHeroMenuOpen(false); router.push(`/trip/${tripId}/edit`); }}
@@ -159,6 +160,7 @@ function OverviewTab({ trip, tripId, totalActivities, expenses }: { trip: Trip; 
           </div>
         </>
       )}
+      </div>{/* end relative cover wrapper */}
       {shareOpen && trip && <ShareModal trip={trip} onClose={() => setShareOpen(false)} />}
       <SaveTripModal
         open={saveTripOpen}
@@ -203,7 +205,7 @@ function OverviewTab({ trip, tripId, totalActivities, expenses }: { trip: Trip; 
         <div className="bg-white rounded-2xl p-5 shadow-soft text-center">
           <p className="text-gray-400 text-sm mb-2">No activities planned yet</p>
           <button onClick={() => setTripTab('itinerary')} className="text-[#607BFF] text-sm font-semibold cursor-pointer">
-            + Plan with Minerva AI
+            + Plan with Aurora AI
           </button>
         </div>
       )}
@@ -309,7 +311,7 @@ function ItineraryTab({ trip, tripId }: { trip: Trip; tripId: string }) {
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-bold text-[#1D1D1D] text-sm">Start planning with Minerva</p>
+              <p className="font-bold text-[#1D1D1D] text-sm">Start planning with Aurora</p>
               <p className="text-xs text-gray-500">Let AI build your full {days.length}-day itinerary</p>
             </div>
           </div>
@@ -330,17 +332,15 @@ function ItineraryTab({ trip, tripId }: { trip: Trip; tripId: string }) {
             <button
               key={day.number}
               onClick={() => setSelectedDay(day.number)}
-              className={`flex-shrink-0 w-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 py-3 transition-all cursor-pointer ${
+              className={`flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-all cursor-pointer bg-white ${
                 activeDay === day.number
-                  ? 'bg-[#1D1D1D] text-white shadow-lg'
-                  : 'bg-white text-gray-600 shadow-soft hover:shadow-card'
+                  ? 'border-2 border-[#1D1D1D] shadow-none'
+                  : 'border border-gray-100 shadow-soft hover:shadow-card'
               }`}
             >
-              <span className="text-[10px] uppercase font-medium opacity-70">{day.label}</span>
-              <span className="text-lg font-bold">{day.number}</span>
-              {hasActivities && (
-                <div className={`w-1.5 h-1.5 rounded-full ${activeDay === day.number ? 'bg-white/60' : 'bg-[#607BFF]'}`} />
-              )}
+              <span className={`text-xl font-bold ${activeDay === day.number ? 'text-[#1D1D1D]' : 'text-gray-500'}`}>
+                {day.number}
+              </span>
             </button>
           );
         })}

@@ -43,8 +43,13 @@ export default function HomePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
 
-  const upcomingTrips = trips.filter((t) => t.endDate && new Date(t.endDate) >= new Date());
-  const pastTrips = trips.filter((t) => t.endDate && new Date(t.endDate) < new Date());
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const ongoingTrips = trips.filter((t) =>
+    t.startDate && t.endDate &&
+    new Date(t.startDate) <= todayStart && new Date(t.endDate) >= todayStart
+  );
+  const upcomingTrips = trips.filter((t) => t.startDate && new Date(t.startDate) > todayStart);
+  const pastTrips = trips.filter((t) => t.endDate && new Date(t.endDate) < todayStart);
 
   const handleDelete = async (tripId: string) => {
     await deleteTrip(tripId);
@@ -140,7 +145,7 @@ export default function HomePage() {
                 </div>
                 <h2 className="text-2xl font-bold text-[#1D1D1D] mb-2">No trips yet</h2>
                 <p className="text-gray-500 text-sm mb-6 max-w-xs mx-auto leading-relaxed">
-                  Create your first trip and let Minerva AI plan the perfect itinerary for you
+                  Create your first trip and let Aurora AI plan the perfect itinerary for you
                 </p>
                 <button
                   onClick={() => router.push('/create-trip')}
@@ -211,6 +216,30 @@ export default function HomePage() {
             </div>
           )}
 
+          {/* Ongoing trips */}
+          {!loading && !loadError && ongoingTrips.length > 0 && (
+            <section>
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-[#1D1D1D]">Ongoing</h2>
+                  <span className="px-2 py-0.5 bg-[#607BFF] text-white text-[10px] font-semibold rounded-full">LIVE</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {ongoingTrips.map((trip) => (
+                  <TripCard
+                    key={trip.id}
+                    trip={trip}
+                    onPress={() => { setCurrentTrip(trip); router.push(`/trip/${trip.id}`); }}
+                    onDelete={handleDelete}
+                    onShare={(t) => setShareTrip(t)}
+                    onEdit={(t) => { setCurrentTrip(t); router.push(`/trip/${t.id}/edit`); }}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Upcoming trips */}
           {!loading && !loadError && upcomingTrips.length > 0 && (
             <section>
@@ -250,7 +279,7 @@ export default function HomePage() {
                 </div>
                 <div className="text-left">
                   <p className="text-xs text-gray-500">AI-powered travel planning</p>
-                  <p className="font-semibold text-[#1D1D1D]">Ask Minerva anything ✨</p>
+                  <p className="font-semibold text-[#1D1D1D]">Ask Aurora anything ✨</p>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-400" />
