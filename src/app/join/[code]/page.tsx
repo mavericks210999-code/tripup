@@ -26,7 +26,7 @@ export default function JoinTripPage() {
 
   const fetchTripByCode = async (inviteCode: string) => {
     try {
-      // Ensure we have a session so RLS allows the read
+      // Ensure we have a session so the RPC caller is authenticated
       let { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         const { data } = await supabase.auth.signInAnonymously();
@@ -34,11 +34,11 @@ export default function JoinTripPage() {
         if (session?.user) setUser(supabaseUserToAppUser(session.user));
       }
 
-      const { data, error } = await supabase
-        .from('trips')
-        .select('*')
-        .eq('invite_code', inviteCode)
-        .single();
+      // Use SECURITY DEFINER RPC — direct SELECT is blocked by RLS for
+      // non-members (chicken-and-egg: the invitee isn't a participant yet).
+      const { data, error } = await supabase.rpc('get_trip_by_invite_code', {
+        p_invite_code: inviteCode.toUpperCase(),
+      });
 
       if (error || !data) {
         setStatus('error');

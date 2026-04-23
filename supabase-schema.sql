@@ -165,3 +165,53 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.join_trip_by_code(TEXT, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
 GRANT  EXECUTE ON FUNCTION public.join_trip_by_code(TEXT, TEXT, TEXT, TEXT, TEXT) TO authenticated;
 GRANT  EXECUTE ON FUNCTION public.join_trip_by_code(TEXT, TEXT, TEXT, TEXT, TEXT) TO anon;
+
+-- ─── get_trip_by_invite_code: SECURITY DEFINER preview lookup ────────────────
+-- WHY: Same RLS chicken-and-egg as join_trip_by_code. The /join/[code] page
+-- needs to render a trip preview (destination, dates, cover image, participant
+-- count) *before* the user clicks Join. A direct client SELECT is blocked by
+-- the participants-only SELECT policy on trips. This SECURITY DEFINER function
+-- bypasses RLS for the read while still requiring the caller to be
+-- authenticated. Only exposes fields already shown in the preview UI.
+
+CREATE OR REPLACE FUNCTION public.get_trip_by_invite_code(
+  p_invite_code TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+DECLARE
+  v_result JSONB;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  SELECT jsonb_build_object(
+    'id',           id,
+    'destination',  destination,
+    'dates',        dates,
+    'start_date',   start_date,
+    'end_date',     end_date,
+    'cover_image',  cover_image,
+    'owner_id',     owner_id,
+    'participants', participants,
+    'itinerary',    itinerary,
+    'invite_code',  invite_code,
+    'preferences',  preferences
+  )
+  INTO v_result
+  FROM public.trips
+  WHERE invite_code = UPPER(p_invite_code)
+  LIMIT 1;
+
+  RETURN v_result;  -- NULL if code not found
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.get_trip_by_invite_code(TEXT) FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION public.get_trip_by_invite_code(TEXT) TO authenticated;
+GRANT  EXECUTE ON FUNCTION public.get_trip_by_invite_code(TEXT) TO anon;
