@@ -40,10 +40,13 @@ export default function ShareModal({ trip, onClose }: ShareModalProps) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-50 animate-backdrop" onClick={onClose} />
       <div
-        className="fixed z-50 bg-white rounded-3xl p-6 shadow-2xl w-[calc(100%-48px)] max-w-sm animate-fade-in-up"
-        style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+        className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center px-6 animate-backdrop"
+        onClick={onClose}
+      >
+      <div
+        className="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-sm animate-fade-in-up"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
@@ -105,6 +108,7 @@ export default function ShareModal({ trip, onClose }: ShareModalProps) {
             Share
           </button>
         </div>
+      </div>
       </div>
     </>
   );

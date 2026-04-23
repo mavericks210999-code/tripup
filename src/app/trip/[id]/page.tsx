@@ -338,7 +338,7 @@ function ItineraryTab({ trip, tripId }: { trip: Trip; tripId: string }) {
                   : 'border border-gray-100 shadow-soft hover:shadow-card'
               }`}
             >
-              <span className={`text-xl font-bold ${activeDay === day.number ? 'text-[#1D1D1D]' : 'text-gray-500'}`}>
+              <span className={`text-base font-semibold ${activeDay === day.number ? 'text-[#1D1D1D]' : 'text-gray-500'}`}>
                 {day.number}
               </span>
             </button>
