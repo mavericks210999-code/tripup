@@ -11,7 +11,7 @@ import {
   supabaseUserToAppUser,
 } from '@/services/auth';
 import { joinTripByCode } from '@/services/trips';
-import { Sparkles, Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -104,13 +104,8 @@ export default function AuthPage() {
           <ArrowLeft className="w-6 h-6" />
         </button>
 
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 minerva-gradient rounded-lg flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-xl font-bold text-[#1D1D1D]">
-            trip<span className="text-[#607BFF]">up</span>
-          </span>
+        <div className="mb-8">
+          <img src="/logo.svg" alt="TripUp" className="h-10 w-auto" />
         </div>
 
         <h1 className="text-3xl font-bold text-[#1D1D1D]">

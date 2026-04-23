@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
   Compass, MapPin, Thermometer, Star, ChevronDown, ChevronUp,
   Calendar, Users, X, ArrowRight, CheckCircle2, Sparkles,
@@ -9,12 +10,16 @@ import {
 import AuthGuard from '@/components/AuthGuard';
 import FloatingNav from '@/components/FloatingNav';
 
+const ExploreMap = dynamic(() => import('@/components/ExploreMap'), { ssr: false });
+
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 const TRENDING_DESTINATIONS = [
   {
     name: 'Bali, Indonesia',
     country: 'Indonesia',
+    lat: -8.3405,
+    lng: 115.0920,
     temp: '28°C',
     season: 'Dry season',
     rating: 4.8,
@@ -33,6 +38,8 @@ const TRENDING_DESTINATIONS = [
   {
     name: 'Kyoto, Japan',
     country: 'Japan',
+    lat: 35.0116,
+    lng: 135.7681,
     temp: '22°C',
     season: 'Cherry blossom',
     rating: 4.9,
@@ -51,6 +58,8 @@ const TRENDING_DESTINATIONS = [
   {
     name: 'Amalfi Coast, Italy',
     country: 'Italy',
+    lat: 40.6340,
+    lng: 14.6027,
     temp: '26°C',
     season: 'Summer',
     rating: 4.9,
@@ -69,6 +78,8 @@ const TRENDING_DESTINATIONS = [
   {
     name: 'Santorini, Greece',
     country: 'Greece',
+    lat: 36.3932,
+    lng: 25.4615,
     temp: '24°C',
     season: 'Perfect weather',
     rating: 4.8,
@@ -87,6 +98,8 @@ const TRENDING_DESTINATIONS = [
   {
     name: 'Patagonia, Argentina',
     country: 'Argentina',
+    lat: -50.9423,
+    lng: -73.4068,
     temp: '12°C',
     season: 'Hiking season',
     rating: 4.9,
@@ -105,6 +118,8 @@ const TRENDING_DESTINATIONS = [
   {
     name: 'Marrakech, Morocco',
     country: 'Morocco',
+    lat: 31.6295,
+    lng: -7.9811,
     temp: '30°C',
     season: 'Spring',
     rating: 4.7,
@@ -123,6 +138,8 @@ const TRENDING_DESTINATIONS = [
   {
     name: 'Lisbon, Portugal',
     country: 'Portugal',
+    lat: 38.7169,
+    lng: -9.1399,
     temp: '20°C',
     season: 'Best weather',
     rating: 4.8,
@@ -141,6 +158,8 @@ const TRENDING_DESTINATIONS = [
   {
     name: 'New York, USA',
     country: 'USA',
+    lat: 40.7128,
+    lng: -74.0060,
     temp: '18°C',
     season: 'Spring',
     rating: 4.7,
@@ -297,6 +316,8 @@ function PlanModal({ destination, onClose, onConfirm }: PlanModalProps) {
 interface Destination {
   name: string;
   country: string;
+  lat: number;
+  lng: number;
   temp: string;
   season: string;
   rating: number;
@@ -409,6 +430,12 @@ function DestinationCard({
 export default function ExplorePage() {
   const router = useRouter();
   const [planningDest, setPlanningDest] = useState<string | null>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const handlePinClick = (name: string) => {
+    const el = cardRefs.current[name];
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const handleConfirm = (startDate: string, endDate: string, groupSize: number) => {
     if (!planningDest) return;
@@ -443,6 +470,20 @@ export default function ExplorePage() {
           </div>
         </div>
 
+        {/* Map section */}
+        <div className="px-5 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-[#222222]">Destinations on map</h2>
+            <span className="text-xs text-gray-400">Tap a pin to scroll</span>
+          </div>
+          <div className="h-56 rounded-2xl overflow-hidden shadow-[rgba(0,0,0,0.02)_0px_0px_0px_1px,rgba(0,0,0,0.06)_0px_4px_12px]">
+            <ExploreMap
+              pins={TRENDING_DESTINATIONS.map(d => ({ name: d.name, lat: d.lat, lng: d.lng, photoId: d.photoId }))}
+              onPinClick={handlePinClick}
+            />
+          </div>
+        </div>
+
         {/* Trending section */}
         <div className="px-5">
           <div className="flex items-center justify-between mb-3">
@@ -452,11 +493,12 @@ export default function ExplorePage() {
 
           <div className="space-y-4">
             {TRENDING_DESTINATIONS.map((dest, i) => (
-              <DestinationCard
-                key={i}
-                dest={dest}
-                onPlanTrip={(name) => setPlanningDest(name)}
-              />
+              <div key={i} ref={(el) => { cardRefs.current[dest.name] = el; }}>
+                <DestinationCard
+                  dest={dest}
+                  onPlanTrip={(name) => setPlanningDest(name)}
+                />
+              </div>
             ))}
           </div>
         </div>

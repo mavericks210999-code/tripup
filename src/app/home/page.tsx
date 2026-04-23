@@ -63,7 +63,7 @@ export default function HomePage() {
             <div>
               <p className="text-gray-500 text-sm">{user ? 'Welcome back!' : 'Plan your next adventure'}</p>
               <h1 className="text-3xl font-bold text-[#1D1D1D] mt-0.5">
-                {user ? `${user.name?.split(' ')[0] || 'Traveler'} 👋` : 'TripUp ✈️'}
+                {user ? `${user.name?.split(' ')[0] || 'Traveler'} 👋` : 'TripUp'}
               </h1>
             </div>
             <div className="flex items-center gap-2">

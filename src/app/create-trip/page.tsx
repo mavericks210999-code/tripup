@@ -188,7 +188,7 @@ function CreateTripContent() {
       setCurrentTrip(fullTrip);
       setAllTrips([fullTrip, ...allTrips.filter(t => t.id !== tripId)]);
       if (Object.keys(itinerary).length > 0) {
-        showToast(`${destination} trip created with itinerary! ✈️`);
+        showToast(`${destination} trip created with itinerary!`);
       }
       router.push(`/trip/${tripId}`);
     } catch (err) {
@@ -240,7 +240,7 @@ function CreateTripContent() {
                   <Sparkles className="w-4 h-4 text-[#607BFF]" />
                   <span className="text-xs font-semibold text-[#607BFF] uppercase tracking-wider">Step 1 of 3</span>
                 </div>
-                <h1 className="text-3xl font-bold text-[#1D1D1D] leading-tight">Where are you<br />heading? ✈️</h1>
+                <h1 className="text-3xl font-bold text-[#1D1D1D] leading-tight">Where are you<br />heading?</h1>
                 <p className="text-gray-500 text-sm mt-2">Minerva will plan your perfect trip there</p>
               </div>
 
