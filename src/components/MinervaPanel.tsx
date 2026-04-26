@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, X, Send, Loader2, Check } from 'lucide-react';
+import { X, Send, Loader2, Check } from 'lucide-react';
+import { AuroraOrb } from '@/components/AuroraOrb';
 import { useAppStore } from '@/store/useAppStore';
 import { ItineraryDay } from '@/types';
 import { generateItinerary, askMinerva } from '@/services/ai';
@@ -149,8 +150,8 @@ export default function MinervaPanel({ tripId, destination, tripDays, travelStyl
           {/* Header */}
           <div className="minerva-gradient p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-full overflow-hidden">
+                <AuroraOrb isThinking={minervaLoading} />
               </div>
               <div>
                 <h3 className="text-white font-semibold text-sm">Aurora</h3>

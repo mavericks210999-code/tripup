@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Sparkles, Plus, ChevronRight, MapPin } from 'lucide-react';
+import { Search, Plus, ChevronRight, MapPin } from 'lucide-react';
+import { AuroraOrb } from '@/components/AuroraOrb';
 import { useAppStore } from '@/store/useAppStore';
 import AuthGuard from '@/components/AuthGuard';
 import FloatingNav from '@/components/FloatingNav';
@@ -15,7 +16,7 @@ import ShareModal from '@/components/ShareModal';
 
 export default function HomePage() {
   const router = useRouter();
-  const { user, allTrips, setCurrentTrip, setAllTrips, setMinervaOpen, minervaOpen } = useAppStore();
+  const { user, allTrips, setCurrentTrip, setAllTrips, setMinervaOpen, minervaOpen, minervaLoading } = useAppStore();
   const [trips, setTrips] = useState<Trip[]>(allTrips); // seed from persisted store
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -78,9 +79,9 @@ export default function HomePage() {
               {user && (
                 <button
                   onClick={() => setMinervaOpen(true)}
-                  className="w-10 h-10 minerva-gradient rounded-full flex items-center justify-center shadow-soft cursor-pointer"
+                  className="w-10 h-10 rounded-full overflow-hidden shadow-soft cursor-pointer"
                 >
-                  <Sparkles className="w-5 h-5 text-white" />
+                  <AuroraOrb isThinking={minervaLoading} />
                 </button>
               )}
             </div>
@@ -90,8 +91,8 @@ export default function HomePage() {
           {!user && !loading && (
             <div className="animate-fade-in-up">
               <div className="bg-white rounded-3xl p-6 shadow-soft text-center">
-                <div className="w-16 h-16 minerva-gradient rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Sparkles className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 rounded-2xl overflow-hidden mx-auto mb-4">
+                  <AuroraOrb isThinking={false} />
                 </div>
                 <h2 className="text-xl font-bold text-[#1D1D1D] mb-2">AI-powered trip planning</h2>
                 <p className="text-gray-500 text-sm mb-5 leading-relaxed">
@@ -274,8 +275,8 @@ export default function HomePage() {
               className="w-full bg-white rounded-2xl p-4 shadow-soft flex items-center justify-between cursor-pointer hover:shadow-card transition-shadow"
             >
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 minerva-gradient rounded-full flex items-center justify-center shadow-md">
-                  <Sparkles className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 rounded-full overflow-hidden">
+                  <AuroraOrb isThinking={minervaLoading} />
                 </div>
                 <div className="text-left">
                   <p className="text-xs text-gray-500">AI-powered travel planning</p>

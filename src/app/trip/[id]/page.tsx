@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   Sun, Users, Calendar, MapPin, Star, Clock, ExternalLink,
   Plane, Hotel, Car, Camera, ShoppingBag, Ticket,
-  AlertCircle, Plus, Copy, Check, Loader2, Sparkles, MoreVertical, Edit3, Share2
+  AlertCircle, Plus, Copy, Check, Loader2, MoreVertical, Edit3, Share2
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { getTrip, generateDays } from '@/services/trips';
@@ -19,6 +19,7 @@ import MinervaPanel from '@/components/MinervaPanel';
 import ItineraryCard from '@/components/ItineraryCard';
 import DayModal from '@/components/DayModal';
 import ExpenseCard from '@/components/ExpenseCard';
+import { AuroraOrb } from '@/components/AuroraOrb';
 import ShareModal from '@/components/ShareModal';
 import SaveTripModal from '@/components/SaveTripModal';
 import { Trip, Activity, Expense } from '@/types';
@@ -307,8 +308,8 @@ function ItineraryTab({ trip, tripId }: { trip: Trip; tripId: string }) {
       {totalActivities === 0 && (
         <div className="bg-white rounded-3xl p-5 shadow-soft mb-5 animate-fade-in-up">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 minerva-gradient rounded-full flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+              <AuroraOrb isThinking={false} />
             </div>
             <div>
               <p className="font-bold text-[#1D1D1D] text-sm">Start planning with Aurora</p>
