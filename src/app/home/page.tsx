@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Plus, ChevronRight, MapPin } from 'lucide-react';
+import { Search, Plus, ChevronRight } from 'lucide-react';
 import { AuroraOrb } from '@/components/AuroraOrb';
 import { useAppStore } from '@/store/useAppStore';
 import AuthGuard from '@/components/AuthGuard';
@@ -141,8 +141,8 @@ export default function HomePage() {
           {!loading && !loadError && user && trips.length === 0 && (
             <div className="animate-fade-in-up space-y-6">
               <div className="text-center py-10">
-                <div className="w-20 h-20 minerva-gradient rounded-3xl flex items-center justify-center mx-auto mb-5">
-                  <MapPin className="w-10 h-10 text-white" />
+                <div className="w-20 h-20 rounded-3xl overflow-hidden mx-auto mb-5">
+                  <AuroraOrb />
                 </div>
                 <h2 className="text-2xl font-bold text-[#1D1D1D] mb-2">No trips yet</h2>
                 <p className="text-gray-500 text-sm mb-6 max-w-xs mx-auto leading-relaxed">

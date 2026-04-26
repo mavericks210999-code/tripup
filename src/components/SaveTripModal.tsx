@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Mail, Sparkles, Loader2, ArrowLeft } from 'lucide-react';
+import { X, Mail, Loader2, ArrowLeft } from 'lucide-react';
+import { AuroraOrb } from '@/components/AuroraOrb';
 import { signInWithGoogle, sendMagicLink } from '@/services/auth';
 
 interface SaveTripModalProps {
@@ -92,8 +93,8 @@ export default function SaveTripModal({
         </button>
 
         {/* Icon */}
-        <div className="w-11 h-11 minerva-gradient rounded-2xl flex items-center justify-center mb-4">
-          <Sparkles className="w-5 h-5 text-white" />
+        <div className="w-11 h-11 rounded-2xl overflow-hidden mb-4">
+          <AuroraOrb />
         </div>
 
         {/* ─── Success state ──────────────────────────────────────────── */}

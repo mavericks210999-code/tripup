@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Sparkles, MoreHorizontal } from 'lucide-react';
+import { ChevronLeft, MoreHorizontal } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { AuroraOrb } from '@/components/AuroraOrb';
 import { TripTab } from '@/types';
 
 interface TripHeaderProps {
@@ -45,10 +46,10 @@ export default function TripHeader({ destination, dates, showBack = true }: Trip
         <div className="flex items-center gap-1">
           <button
             onClick={() => setMinervaOpen(true)}
-            className="w-10 h-10 minerva-gradient rounded-full flex items-center justify-center shadow-soft"
-            title="Ask Minerva"
+            className="w-10 h-10 rounded-full overflow-hidden shadow-soft"
+            title="Ask Aurora"
           >
-            <Sparkles className="w-5 h-5 text-white" />
+            <AuroraOrb />
           </button>
           <button
             onClick={() => setMenuOpen(true)}
