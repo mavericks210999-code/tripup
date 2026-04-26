@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       const days = Math.min(Math.max(Number(context?.days) || 3, 1), 30);
       const style = String(context?.style ?? 'moderate').slice(0, 100);
 
-      systemPrompt = `You are Minerva, an expert AI travel planner. Generate a realistic ${days}-day itinerary for ${dest}.
+      systemPrompt = `You are Aurora, an expert AI travel planner. Generate a realistic ${days}-day itinerary for ${dest}.
 Travel style: ${style}.
 Include 3-4 activities per day: morning, afternoon, evening.
 Use real place names with accurate addresses.
@@ -83,7 +83,7 @@ ${ITINERARY_SCHEMA}`;
     } else if (type === 'modify') {
       // Truncate serialised itinerary to cap token spend
       const itineraryStr = JSON.stringify(currentItinerary ?? {}).slice(0, 8000);
-      systemPrompt = `You are Minerva, an expert AI travel planner. Modify this itinerary based on the user request.
+      systemPrompt = `You are Aurora, an expert AI travel planner. Modify this itinerary based on the user request.
 Current itinerary: ${itineraryStr}
 ${ITINERARY_SCHEMA}
 Return the COMPLETE updated itinerary, preserving unchanged days.`;
@@ -91,7 +91,7 @@ Return the COMPLETE updated itinerary, preserving unchanged days.`;
     } else {
       // Chat mode
       const dest = String(context?.destination ?? '').slice(0, 200);
-      systemPrompt = `You are Minerva, a friendly AI travel assistant for TripUp.
+      systemPrompt = `You are Aurora, a friendly AI travel assistant for TripUp.
 ${dest ? `Current trip destination: ${dest}.` : ''}
 Give concise, helpful travel advice. 2-3 sentences max unless asked for more detail.
 If asked to plan/generate an itinerary, tell the user to click the sparkle button for full AI planning.`;

@@ -255,7 +255,7 @@ function PlanModal({ destination, onClose, onConfirm }: PlanModalProps) {
           {tripDays > 0 && (
             <div className="bg-[#607BFF]/10 rounded-xl px-4 py-2 text-center">
               <span className="text-[#607BFF] font-semibold text-sm">
-                {tripDays} day{tripDays !== 1 ? 's' : ''} · Minerva will plan each one ✨
+                {tripDays} day{tripDays !== 1 ? 's' : ''} · Aurora will plan each one ✨
               </span>
             </div>
           )}
@@ -303,7 +303,7 @@ function PlanModal({ destination, onClose, onConfirm }: PlanModalProps) {
           className="w-full bg-[#1D1D1D] text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer hover:bg-gray-800 transition-colors"
         >
           <Sparkles className="w-4 h-4" />
-          Continue &amp; plan with Minerva
+          Continue &amp; plan with Aurora
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
