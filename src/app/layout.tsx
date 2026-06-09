@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import ToastContainer from "@/components/Toast";
 
@@ -39,6 +40,7 @@ export default function RootLayout({
           {children}
           <ToastContainer />
         </div>
+        <Analytics />
       </body>
     </html>
   );
